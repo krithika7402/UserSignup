@@ -2,26 +2,29 @@ package com.example.cruddemo
 
 import android.app.Application
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cruddemo.ui.theme.CRUDDemoTheme
 import kotlinx.coroutines.launch
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,32 +34,32 @@ class MainActivity : ComponentActivity() {
                 val signUpViewModel: SignUpViewModel by viewModels()
                 val signInViewModel: SignInViewModel by viewModels()
 
-                // Get the NavController
                 val navController = rememberNavController()
 
                 NavHost(
                     navController = navController,
-                    startDestination = "signup" // Set the start destination
+                    startDestination = "signup"
                 ) {
                     composable("signup") {
                         SignUpScreen(
                             viewModel = signUpViewModel,
                             onSignUpSuccess = {
-
                                 navController.navigate("login")
                             }
                         )
                     }
+
                     composable("login") {
                         SignInScreen(
                             viewModel = signInViewModel,
-                            onSignInSuccess = {
-                                // Handle navigation here if needed
+                            onSignInSuccess = { name ->
+                                navController.navigate("name/$name")
                             }
                         )
                     }
-                    composable("name") { backStackEntry ->
-                        val name = backStackEntry.arguments?.getString("name") ?: ""
+
+                    composable("name/{name}") { navBackStackEntry ->
+                        val name = navBackStackEntry.arguments?.getString("name") ?: ""
                         NameScreen(name = name)
                     }
                 }
@@ -117,15 +120,15 @@ class SignInViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun setEmail(email: String) {
-        this.emailValue = email // Update the property here
+        this.emailValue = email
     }
 
     fun setName(name: String) {
-        this.nameValue = name // Update the property here
+        this.nameValue = name
     }
 
     fun getName(): String {
-        return emailValue // Update the property reference here
+        return emailValue
     }
 }
 
@@ -146,6 +149,7 @@ fun SignUpScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text("Sign Up!", fontWeight = FontWeight(600), modifier = Modifier.padding(20.dp), fontSize = 40.sp)
         TextField(
             value = email,
             onValueChange = { email = it },
@@ -182,7 +186,7 @@ fun SignUpScreen(
 @Composable
 fun SignInScreen(
     viewModel: SignInViewModel,
-    onSignInSuccess: () -> Unit
+    onSignInSuccess: (Any?) -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -194,6 +198,8 @@ fun SignInScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text("Sign In!", fontWeight = FontWeight(600), modifier = Modifier.padding(30.dp), fontSize = 40.sp)
+
         TextField(
             value = email,
             onValueChange = { email = it },
@@ -211,8 +217,9 @@ fun SignInScreen(
                     val name = viewModel.signIn(email, password)
                     if (name != null) {
                         viewModel.setName(name)
-                        onSignInSuccess()
+                        onSignInSuccess(name)
                     } else {
+
                     }
                 }
             }
